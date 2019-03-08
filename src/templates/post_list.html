@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% load urlify %}
+{% block head_title %}
+    {{block.super}} | Detail
+{% endblock head_title %}
+
+{% block style %}
+    h1{color:#333333}
+{% endblock style %}
+
+
+{% block content %}
+<h1>Post List</h1>
+{% my_tag %}
+<form method="GET" action="">
+    <div class="input-group">
+        <input class="form-control type="text" name="q" placeholder="Search" value="{{request.GET.q}}"/>
+        <button type="Submit" value="Search" class="btn btn-default">Search <i class="fa fa-search"></i></button>
+    </div>
+</form>
+<hr>
+<div class="row">
+    <div class="col-8">
+        {% for post in queryset %}
+        <div class="card w-75" style="width: 18rem;">
+            {% if post.image %}
+            <img class="card-img-top" src="{{post.image.url}}" alt="Card image cap">
+            {% endif %}
+            <div class="card-body">
+                <h5 class="card-title"><a href="{{post.get_absolute_url}}">{{post.title}}</a></h5>
+                <small>{{post.publish}}</small><br>
+                {% if post.user.get_full_name %}
+                <small>Author: {{post.user.get_full_name}}</small><br>
+                {% else %}
+                <small>Author: {{post.user}}</small><br>
+                {% endif %}
+                {% if post.draft %}
+                <small>DRAFT</small>
+                {% endif %}
+                {% if post.publish > today %}
+                <small> | Future Post</small>
+                {% endif %}
+                <p class="card-text"><div class="post-item-detail">{{post.get_markdown|truncatewords:15}}</div></p>
+
+                <a href="{% url 'posts:detail' slug=post.slug %}" class="btn btn-primary">View</a>
+            </div>
+        </div>
+
+        {% endfor %}
+    </div>
+</div>
+
+<div class="pagination">
+    <span class="step-links">
+        {% if queryset.has_previous %}
+            <a href="?page={{ queryset.previous_page_number }}{% if request.GET.q %}request&q={{request.GET.q}}{% endif %}">previous</a>
+        {% endif %}
+
+        <span class="current">
+            Page {{ queryset.number }} of {{ queryset.paginator.num_pages }}.
+        </span>
+
+        {% if queryset.has_next %}
+            <a href="?page={{ queryset.next_page_number }}{% if request.GET.q %}request&q={{request.GET.q}}{% endif %}">next</a>
+        {% endif %}
+    </span>
+</div>
+
+{% endblock content %}

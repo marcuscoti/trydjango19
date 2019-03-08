@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% load urlify %}
+{% load crispy_forms_tags %}
+
+{% block head_title %}
+    {{object.title}}
+{% endblock head_title %}
+
+{% block style %}
+    h1{color:#333333}
+{% endblock style %}
+
+
+{% block content %}
+
+<div class="col-sm-6">
+    <h1>{{object.title}}</h1>
+        {% if object.image %}
+            <img src="{{object.image.url}}" class="card-img-top"/>
+        {% endif %}
+    {% if object.draft %}
+        <small>DRAFT</small>
+    {% endif %}
+
+    <small>{{object.publish}}</small><br>
+    {% if object.user.get_full_name %}
+        <small>Author: {{object.user.get_full_name}}</small><br>
+    {% else %}
+        <small>Author: {{object.user}}</small><br>
+    {% endif %}
+    <p>Read time: {{object.read_time|time:"i"}} minutes</p>
+        <br>
+    <div class="post-item-detail">{{object.get_markdown}}</div>
+
+
+</div>
+    <div class="comments col-6">
+        {% if request.user.is_authenticated %}
+            <form method="POST" action=".">
+                {%csrf_token%}
+                {{comment_form|crispy}}
+                <input type="submit" value="Post Comment" class="btn btn-default">
+            </form>
+        {% else %}
+            <p>You must be logged to comment</p>
+        {% endif %}
+        <p class="lead">Comments</p>
+        {% for com in comments %}
+        <div class="">
+            <blockquote class="blockquote">
+                <p> {{com.content }}</p>
+                <footer class="blockquote-footer">via: {{com.user.username}} | {{com.timestamp|timesince}} |
+                    {% if com.children.count > 0 %}
+                        {{com.children.count}} comments
+                    {% endif %}
+                    {% if request.user.is_authenticated %} <a href="#" class="comment-reply-btn">Reply</a>{% endif %} |
+                    <a href="{{com.get_absolute_url}}" class="thread-btn">Thread</a>
+                </footer>
+                <div class="comment-reply" style="display:none;">
+                    {% for reply in com.children %}
+                        <blockquote class="blockquote">
+                            <p> {{reply.content }}</p>
+                            <footer class="blockquote-footer">via: {{reply.user.username}} | {{reply.timestamp|timesince}}</footer>
+                        </blockquote>
+                    {% endfor %}
+
+                    <form method="POST" action=".">
+                        {%csrf_token%}
+                        {{comment_form|crispy}}
+                        <input type="hidden" name="parent_id" value="{{com.id}}">
+                        <input type="submit" value="Reply" class="btn btn-default">
+                    </form>
+                </div>
+            </blockquote>
+        </div>
+
+        {% endfor %}
+    </div>
+
+<br>
+
+<a href="https://www.facebook.com/sharer/sharer.php?u={{request.build_absolute_uri}}">
+Share on Facebook
+</a>
+<a href="https://twitter.com/home?status={{object.content|urlify}}%20{{request.build_absolute_uri}}">
+Share on Twitter
+</a>
+<br>
+<div class="fb-like" data-href="{{request.build_absolute_uri}}" data-layout="standard" data-action="like" data-size="small" data-show-faces="true" data-share="true"></div>
+<br>
+<div class="fb-comments" data-href="{{request.build_absolute_uri}}" data-numposts="5"></div>
+{% endblock content %}
